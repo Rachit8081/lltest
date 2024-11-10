@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login and SignUp</title>
+ <style>body {
+    background-color: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+input {
+    padding: 10px;
+    margin: 10px 0;
+    width: 200px;
+    border: 1px solid white;
+    background-color: black;
+    color: white;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+a {
+    color: #007bff;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+</style>
+</head>
+<body>
+    <div id="loginContainer">
+        <h1>Login Form</h1>
+        <form id="loginForm">
+            <input type="text" id="loginId" placeholder="Login ID" required><br><br>
+            <input type="password" id="loginPassword" placeholder="Password" required><br><br>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="#" id="signupLink">Sign Up</a></p>
+    </div>
+
+    <div id="signupContainer" style="display: none;">
+        <h1>Sign Up</h1>
+        <form id="signupForm">
+            <input type="text" id="newLoginId" placeholder="New Login ID" required><br><br>
+            <input type="password" id="newLoginPassword" placeholder="New Password" required><br><br>
+            <button type="submit">Sign Up</button>
+        </form>
+    </div>
+
+    <div id="applicationFormContainer" style="display: none;">
+        <h1>Application Form</h1>
+        <form id="applicationForm">
+            <input type="text" id="applicationNumber" placeholder="Application Number" required><br><br>
+            <input type="date" id="dob" required><br><br>
+            <input type="password" id="formPassword" placeholder="Password" required><br><br>
+            <input type="text" id="agentName" placeholder="Agent Name" required><br><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div id="thankyouContainer" style="display: none;">
+        <h1>Thank You!</h1>
+        <button id="fillAgainBtn">Fill Again</button>
+    </div>
+
+<script>// Handle login
+document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    
+    const loginId = document.getElementById('loginId').value;
+    const loginPassword = document.getElementById('loginPassword').value;
+
+    // Get stored users from local storage
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+
+    const user = users.find(user => user.loginId === loginId && user.password === loginPassword);
+
+    if (user) {
+        // Show application form if login is successful
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('applicationFormContainer').style.display = 'block';
+    } else {
+        alert('Invalid login credentials');
+    }
+});
+
+// Handle signup
+document.getElementById('signupForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const newLoginId = document.getElementById('newLoginId').value;
+    const newLoginPassword = document.getElementById('newLoginPassword').value;
+
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+
+    // Check if user already exists
+    if (users.some(user => user.loginId === newLoginId)) {
+        alert('User already exists');
+        return;
+    }
+
+    // Add new user to local storage
+    users.push({ loginId: newLoginId, password: newLoginPassword });
+    localStorage.setItem('users', JSON.stringify(users));
+
+    alert('User registered successfully!');
+    document.getElementById('signupContainer').style.display = 'none';
+    document.getElementById('loginContainer').style.display = 'block';
+});
+
+// Show signup form
+document.getElementById('signupLink').addEventListener('click', function () {
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('signupContainer').style.display = 'block';
+});
+
+// Handle application form submission
+document.getElementById('applicationForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const applicationNumber = document.getElementById('applicationNumber').value;
+    const dob = document.getElementById('dob').value;
+    const password = document.getElementById('formPassword').value;
+    const agentName = document.getElementById('agentName').value;
+
+    // Send data to Google Sheets
+    fetch('https://script.google.com/macros/s/AKfycbzHHHmTCbZjTyslaWRD-CMkfNzfftav04FdC2ze8Dfm0vc7fIWyfrjL-h-X3BaWodbA3Q/exec', {
+    method: 'POST',
+    body: JSON.stringify({
+        applicationNumber: applicationNumber,
+        dob: dob,
+        password: password,
+        agentName: agentName
+    }),
+    headers: { 'Content-Type': 'application/json' },
+    mode: 'no-cors'  // This disables CORS checks
+})
+.then(response => {
+    console.log("Data sent successfully");
+    document.getElementById('applicationFormContainer').style.display = 'none';
+    document.getElementById('thankyouContainer').style.display = 'block';
+})
+.catch(error => {
+    console.error('Error:', error);
+    alert('Something went wrong. Please try again later.');
+});
+
+
+});
+
+// Fill again functionality
+document.getElementById('fillAgainBtn').addEventListener('click', function () {
+    document.getElementById('thankyouContainer').style.display = 'none';
+    document.getElementById('applicationFormContainer').style.display = 'block';
+    document.getElementById('applicationForm').reset();
+});
+</script>
+</body>
+</html>
